@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gerador de Relatório de Tráfego Pago</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400&family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f6;--panel:#fff;--card:#f4f6fa;--tx:#1b2333;--mu:#5d6880;--bd:#dde2ec;--ac:#3b82f6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d111a;--panel:#161c29;--card:#1d2534;--tx:#eef1f7;--mu:#97a2b8;--bd:#2a3347;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d111a;--panel:#161c29;--card:#1d2534;--tx:#eef1f7;--mu:#97a2b8;--bd:#2a3347;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;overflow-x:hidden;background:var(--bg);color:var(--tx);font-family:'Ubuntu',system-ui,sans-serif}
+.app{display:grid;grid-template-columns:380px minmax(0,1fr);gap:20px;max-width:1200px;margin:0 auto;padding:20px}
+.app>*{min-width:0}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr);padding:12px;gap:14px}.panel{padding:14px}}
+.panel{background:var(--panel);border:1px solid var(--bd);border-radius:16px;padding:18px;align-self:start}
+h1{font-size:20px;margin:0 0 14px}
+h2{font-size:14px;margin:18px 0 8px;color:var(--mu);font-weight:500}
+label{display:block;font-size:13px;color:var(--mu);margin:8px 0 4px}
+input[type=text],input[type=number],input[type=date]{width:100%;min-width:0;max-width:100%;min-height:44px;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:inherit;font-size:16px}
+.row>div{min-width:0}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 12px;border-radius:999px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:inherit;font-size:14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:500}
+.sw{width:34px;height:34px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.sw[aria-pressed=true]{border-color:var(--tx)}
+.btn{width:100%;padding:12px;border-radius:12px;border:0;font:inherit;font-size:15px;font-weight:500;cursor:pointer;margin-top:8px}
+.pri{background:var(--ac);color:#fff}
+.sec{background:var(--card);color:var(--tx);border:1px solid var(--bd)}
+.btn:focus-visible,.chip:focus-visible,.sw:focus-visible,input:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.sw-theme{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.tg{position:relative;width:56px;height:30px;border-radius:999px;border:1px solid var(--bd);background:var(--card);cursor:pointer;padding:0}
+.tg::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--ac);transition:transform .2s}
+:root[data-theme="dark"] .tg::after{transform:translateX(26px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tg::after{transform:translateX(26px)}}
+.hint{font-size:12px;color:var(--mu);margin:6px 0 0;line-height:1.4}
+#msg{font-size:13px;margin-top:8px;color:var(--ac);min-height:18px}
+#stage{overflow:hidden;width:100%;max-width:720px}
+#scaler{width:720px;transform-origin:top left}
+/* RELATÓRIO 3:4 */
+#report{width:720px;height:960px;background:var(--panel);color:var(--tx);padding:40px 44px;display:flex;flex-direction:column;gap:16px;border-radius:0;font-family:'Ubuntu',system-ui,sans-serif;position:relative;overflow:hidden}
+#report::before{content:"";position:absolute;left:0;top:0;right:0;height:10px;background:var(--ac)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-top:6px}
+.top .k{font-size:15px;color:var(--mu)}
+.top .n{font-size:38px;font-weight:700;line-height:1.1;margin-top:4px;overflow-wrap:anywhere;max-height:2.2em;overflow:hidden}
+.top .n.sm{font-size:30px}
+.top>div:first-child,.mrow>div{min-width:0}
+.mrow .v,.m .v{overflow-wrap:anywhere}
+.badge{border:1px solid rgba(128,128,128,.35);background:var(--ac);color:#fff;padding:9px 18px;border-radius:999px;font-weight:500;font-size:18px;white-space:nowrap}
+.per{font-size:18px;color:var(--mu);margin-top:8px}
+.money{border:1px solid var(--bd);border-radius:20px;padding:18px 22px}
+.mrow{display:flex;justify-content:space-between;gap:20px}
+.mrow .k{font-size:15px;color:var(--mu)}
+.mrow .v{font-family:'Prompt',sans-serif;font-size:34px;font-weight:400;margin-top:2px}
+.bar{height:16px;background:var(--bd);border-radius:99px;margin-top:18px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ac);border-radius:99px}
+.bt{font-size:15px;color:var(--mu);margin-top:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1;min-height:0}
+.m{border:1px solid var(--bd);border-radius:18px;padding:12px 18px;display:flex;flex-direction:column;justify-content:center}
+.m .l{font-size:16px;font-weight:500}
+.m .v{font-family:'Prompt',sans-serif;font-size:34px;font-weight:400;margin:2px 0;color:var(--ac)}
+.m .d{font-size:13px;color:var(--mu);line-height:1.35}
+.m.big{grid-column:span 2;background:var(--ac);border-color:var(--ac);color:#fff}
+.m.big .v,.m.big .d{color:#fff}
+.m.big .v{font-size:44px}
+.m.big .d{opacity:.9}
+.foot{font-size:13px;color:var(--mu);text-align:center}
+:root{--bc:var(--ac)}
+:root[data-theme="dark"]{--bc:#fff}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:19}
+.site{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);z-index:20;max-width:1200px;margin:20px auto 0;padding:0 20px}
+.brand{display:flex;align-items:center;gap:14px;background:color-mix(in srgb,var(--panel) 65%,transparent);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid var(--bd);border-radius:16px;padding:12px 18px;color:var(--bc)}
+.lg{width:40px;height:34px;display:flex;align-items:center;flex:none;color:var(--bc)}
+.lg svg{width:100%;height:auto;display:block}
+.bn{font-size:20px;font-weight:700;color:var(--bc)}
+.bn span{font-weight:500}
+@media(max-width:900px){.site{padding:0 12px;margin-top:12px}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal[hidden]{display:none}
+.mbox{background:var(--panel);color:var(--tx);border-radius:16px;padding:18px;max-width:520px;width:100%;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto}
+.mbox img{width:100%;border-radius:10px;display:block;margin:10px 0}
+.mbox textarea{width:100%;height:160px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font:13px monospace;padding:8px}
+.mbox a.btn{display:block;text-align:center;text-decoration:none}
+</style>
+</head>
+<body>
+<header class="site"><div class="brand"><div class="lg"><svg viewBox="0 0 256 208" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M256 0H104C46.5624 0 0 46.5624 0 104C0 161.438 46.5624 208 104 208H136V160H104C73.0721 160 48 134.928 48 104C48 73.0721 73.0721 48 104 48H208C234.51 48 256 26.5097 256 0Z" fill="currentColor"/><path d="M192 56H144V207.998C170.51 207.998 192 186.508 192 159.998V56Z" fill="currentColor"/></svg></div><div class="bn">Convertech <span>- Easy Report</span></div></div></header>
+<div class="app">
+<aside class="panel">
+  <h1>Gerador de relatório</h1>
+  <div class="sw-theme"><span style="font-size:14px">Tema: <b id="tn">Claro</b></span><button class="tg" id="tgl" aria-label="Alternar tema claro ou escuro"></button></div>
+
+  <h2>Cor do relatório</h2>
+  <div class="chips" id="cols"></div>
+
+  <h2>Plataforma</h2>
+  <div class="chips" id="plats"></div>
+
+  <h2>Dados do cliente</h2>
+  <label for="client">Nome do cliente</label><input type="text" id="client">
+  <div class="row"><div><label for="start">Início</label><input type="date" id="start"></div><div><label for="end">Fim</label><input type="date" id="end"></div></div>
+
+  <h2>Investimento</h2>
+  <div class="row"><div><label for="spend">Valor investido (R$)</label><input type="number" id="spend" step="0.01" min="0"></div><div><label for="budget">Meta de orçamento (R$)</label><input type="number" id="budget" step="0.01" min="0"></div></div>
+
+  <h2>Métricas</h2>
+  <div class="row"><div><label for="imp">Impressões</label><input type="number" id="imp" min="0"></div><div><label for="reach">Alcance</label><input type="number" id="reach" min="0"></div></div>
+  <div class="row"><div><label for="clicks">Cliques no link</label><input type="number" id="clicks" min="0"></div><div><label for="leads">Leads gerados</label><input type="number" id="leads" min="0"></div></div>
+  <p class="hint">Taxa de cliques, custo por lead e custo por clique são calculados automaticamente.</p>
+
+  <h2>Arquivos</h2>
+  <input type="file" id="csv" accept=".csv,text/csv" hidden>
+  <button class="btn sec" id="imp-btn">Importar arquivo .csv</button>
+  <button class="btn sec" id="tpl">Baixar modelo de CSV</button>
+  <button class="btn pri" id="exp">Exportar relatório em PNG (3:4)</button>
+  <div id="msg" role="status"></div>
+</aside>
+
+<main>
+  <div id="stage"><div id="scaler"><div id="report"></div></div></div>
+</main>
+</div>
+
+<div class="modal" id="modal" hidden><div class="mbox"><b id="mt"></b><div id="mb"></div><p class="hint" id="mh"></p><a class="btn pri" id="ma">Baixar arquivo</a><button class="btn sec" id="mc">Fechar</button></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+const COLORS=[["Azul","#3b82f6"],["Ciano","#06b6d4"],["Rosa","#ec4899"],["Roxo","#8b5cf6"],["Verde","#16a34a"],["Amarelo","#ca8a04"],["Laranja","#f97316"]];
+const PLATS=["Meta Ads","Google Ads","TikTok Ads","Shopee Ads"];
+const S={logo:null,client:"Nome do Cliente",platform:"Meta Ads",start:"",end:"",spend:1500,budget:2000,imp:120000,reach:84000,clicks:2400,leads:96,color:"#3b82f6",theme:null};
+const $=id=>document.getElementById(id);
+const nf=new Intl.NumberFormat("pt-BR"),cf=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+const pf=n=>n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2})+"%";
+const dt=s=>s?s.split("-").reverse().join("/"):"--/--/----";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const num=v=>{v=String(v??"").replace(/[^\d.,-]/g,"");if(!v)return 0;if(v.includes(",")&&v.includes("."))v=v.replace(/\./g,"").replace(",",".");else if(v.includes(","))v=v.replace(",",".");else if((v.match(/\./g)||[]).length>1)v=v.replace(/\./g,"");return parseFloat(v)||0};
+
+const PB={"Meta Ads":"#0866FF","Google Ads":"#FFFFFF","Shopee Ads":"#EE4D2D","TikTok Ads":"#000000"};
+const GL=[["G","#4285F4"],["o","#EA4335"],["o","#FBBC05"],["g","#4285F4"],["l","#34A853"],["e","#EA4335"]].map(l=>`<span style="color:${l[1]}">${l[0]}</span>`).join("")+`<span style="color:#4285F4"> Ads</span>`;
+function render(){
+  document.documentElement.style.setProperty("--ac",S.color);
+  const ctr=S.imp?S.clicks/S.imp*100:0,cpl=S.leads?S.spend/S.leads:0,cpc=S.clicks?S.spend/S.clicks:0;
+  const pct=S.budget?Math.min(100,S.spend/S.budget*100):0,left=Math.max(0,S.budget-S.spend);
+  const M=[
+    ["Impressões",nf.format(S.imp),"Quantas vezes seu anúncio apareceu na tela das pessoas."],
+    ["Alcance",nf.format(S.reach),"Quantas pessoas diferentes viram seu anúncio."],
+    ["Cliques no link",nf.format(S.clicks),"Quantas pessoas clicaram para conhecer seu negócio."],
+    ["Taxa de cliques",pf(ctr),"De cada 100 vezes que o anúncio apareceu, quantas viraram clique."],
+    ["Custo por lead",cf.format(cpl),"Quanto você paga, em média, por cada contato interessado."],
+    ["Custo por clique",cf.format(cpc),"Quanto você paga, em média, por cada clique no anúncio."]];
+  $("report").innerHTML=`
+  <div class="top"><div><div class="k">Relatório de desempenho</div><div class="n${(S.client||"").length>24?" sm":""}">${esc(S.client||"Cliente")}</div><div class="per">Período: ${dt(S.start)} a ${dt(S.end)}</div></div><div class="badge" style="background:${PB[S.platform]}">${S.platform==="Google Ads"?GL:esc(S.platform)}</div></div>
+  <div class="money"><div class="mrow"><div><div class="k">Valor investido</div><div class="v" style="color:var(--ac)">${cf.format(S.spend)}</div></div><div style="text-align:right"><div class="k">Meta de orçamento</div><div class="v">${cf.format(S.budget)}</div></div></div>
+  <div class="bar"><i style="width:${pct}%"></i></div><div class="bt">${pct.toFixed(0)}% da meta utilizada · ainda restam ${cf.format(left)}</div></div>
+  <div class="grid"><div class="m big"><div class="l">Leads gerados</div><div class="v">${nf.format(S.leads)}</div><div class="d">Pessoas que demonstraram interesse e deixaram o contato.</div></div>
+  ${M.map(m=>`<div class="m"><div class="l">${m[0]}</div><div class="v">${m[1]}</div><div class="d">${m[2]}</div></div>`).join("")}</div>`;
+}
+function fit(){const st=$("stage"),sc=Math.min(1,st.clientWidth/720);$("scaler").style.transform=`scale(${sc})`;st.style.height=960*sc+"px"}
+function msg(t){$("msg").textContent=t}
+
+// Tema
+function setTheme(t){S.theme=t;document.documentElement.dataset.theme=t;$("tn").textContent=t==="dark"?"Escuro":"Claro"}
+setTheme(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+$("tgl").onclick=()=>{setTheme(S.theme==="dark"?"light":"dark")};
+
+// Cores e plataformas
+COLORS.forEach(([n,h])=>{const b=document.createElement("button");b.className="sw";b.style.background=h;b.title=n;b.setAttribute("aria-label",n);b.onclick=()=>{S.color=h;sync()};$("cols").append(b)});
+PLATS.forEach(p=>{const b=document.createElement("button");b.className="chip";b.textContent=p;b.onclick=()=>{S.platform=p;sync()};$("plats").append(b)});
+function sync(){
+  [...$("cols").children].forEach((b,i)=>b.setAttribute("aria-pressed",COLORS[i][1]===S.color));
+  [...$("plats").children].forEach(b=>b.setAttribute("aria-pressed",b.textContent===S.platform));
+  render();
+}
+// Campos
+const F={client:"client",start:"start",end:"end",spend:"spend",budget:"budget",imp:"imp",reach:"reach",clicks:"clicks",leads:"leads"};
+function fill(){for(const k in F){$(F[k]).value=S[k]}}
+for(const k in F){$(F[k]).addEventListener("input",e=>{S[k]=["client","start","end"].includes(k)?e.target.value:num(e.target.value);render()})}
+
+// CSV
+const norm=s=>s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z]/g,"");
+const MAP={cliente:"client",nomedocliente:"client",nome:"client",plataforma:"platform",inicio:"start",datainicio:"start",fim:"end",datafim:"end",
+  investido:"spend",valorinvestido:"spend",investimento:"spend",orcamento:"budget",metadeorcamento:"budget",meta:"budget",
+  impressoes:"imp",alcance:"reach",cliques:"clicks",cliquesnolink:"clicks",leads:"leads",leadsgerados:"leads"};
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");const first=t.split(/\r?\n/)[0]||"";const d=(first.match(/;/g)||[]).length>=(first.match(/,/g)||[]).length&&first.includes(";")?";":",";
+  const rows=[];let r=[],c="",q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch=='"'&&t[i+1]=='"'){c+='"';i++}else if(ch=='"')q=false;else c+=ch}
+    else if(ch=='"')q=true;else if(ch===d){r.push(c);c=""}else if(ch=="\n"||ch=="\r"){if(ch=="\r"&&t[i+1]=="\n")i++;r.push(c);rows.push(r);r=[];c=""}else c+=ch}
+  if(c||r.length){r.push(c);rows.push(r)}
+  return rows.filter(x=>x.some(v=>v.trim()));
+}
+function toDate(v){v=v.trim();let m=v.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m)return`${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;return/^\d{4}-\d{2}-\d{2}$/.test(v)?v:""}
+function applyCSV(rows){
+  let pairs=[];
+  if(rows.length>=2&&rows[0].length>2){rows[0].forEach((h,i)=>pairs.push([h,rows[1][i]]))}
+  else pairs=rows.map(r=>[r[0],r[1]]);
+  let n=0;
+  pairs.forEach(([h,v])=>{const k=MAP[norm(h||"")];if(!k||v==null)return;v=String(v).trim();n++;
+    if(k==="client")S.client=v;
+    else if(k==="platform"){const p=PLATS.find(x=>norm(x).startsWith(norm(v).slice(0,4)));if(p)S.platform=p}
+    else if(k==="start"||k==="end")S[k]=toDate(v);
+    else S[k]=num(v)});
+  return n;
+}
+$("imp-btn").onclick=()=>$("csv").click();
+$("csv").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{const n=applyCSV(parseCSV(await f.text()));fill();sync();msg(n?`Arquivo importado: ${n} campos preenchidos.`:"Não encontrei colunas conhecidas. Baixe o modelo de CSV para ver o formato.")}
+  catch(err){msg("Não foi possível ler o arquivo. Confira se é um .csv válido.")}
+  e.target.value="";
+};
+
+// Salvar arquivo (capacidade de downloads)
+async function getDL(){try{return window.claude?await window.claude.use("downloads"):null}catch(e){return null}}
+async function save(name,data){
+  const DL=await getDL();
+  if(!DL)return false;
+  try{await DL.save({filename:name,data});return true}
+  catch(e){if(e&&e.code==="declined"){msg("Download cancelado.");return true}return false}
+}
+function showFile(title,node,href,name,hint){
+  $("mt").textContent=title;const b=$("mb");b.innerHTML="";b.append(node);$("mh").textContent=hint;
+  const a=$("ma");a.href=href;a.download=name;$("modal").hidden=false;
+}
+$("mc").onclick=()=>{$("modal").hidden=true};
+$("modal").onclick=e=>{if(e.target.id==="modal")$("modal").hidden=true};
+$("tpl").onclick=async()=>{
+  const csv="cliente,plataforma,inicio,fim,investido,orcamento,impressoes,alcance,cliques,leads\nNome do Cliente,Meta Ads,2026-10-01,2026-10-21,1500,2000,120000,84000,2400,96\n";
+  if(await save("modelo-relatorio.csv",new Blob(["\uFEFF"+csv],{type:"text/csv"})))msg("Modelo salvo.");
+  else{const t=document.createElement("textarea");t.value=csv;t.readOnly=true;showFile("Modelo de CSV",t,"data:text/csv;charset=utf-8,"+encodeURIComponent("\uFEFF"+csv),"modelo-relatorio.csv","Se o botão não baixar, copie o texto acima, cole no Bloco de Notas e salve como modelo.csv.")}
+};
+$("exp").onclick=async()=>{
+  msg("Gerando imagem...");
+  try{
+    await document.fonts.ready;
+    const cv=await html2canvas($("report"),{scale:1.5,backgroundColor:getComputedStyle($("report")).backgroundColor,useCORS:true,
+      onclone:d=>{const s=d.getElementById("scaler");s.style.transform="none"}});
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    const nm="relatorio-"+(S.client||"cliente").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-")+".png";
+    if(await save(nm,blob))msg("PNG exportado em 1080 × 1440 (3:4).");
+    else{const im=new Image();const url=cv.toDataURL("image/png");im.src=url;im.alt="Relatório";msg("");showFile("Seu relatório está pronto",im,url,nm,"Se o botão não baixar: no computador, clique com o botão direito na imagem e escolha Salvar imagem. No celular, toque e segure a imagem.")}
+  }catch(e){msg("Erro ao gerar o PNG. Tente novamente.")}
+};
+
+addEventListener("resize",fit);if(window.ResizeObserver)new ResizeObserver(fit).observe($("stage"));
+fill();sync();fit();
+</script>
+</body>
+</html>
